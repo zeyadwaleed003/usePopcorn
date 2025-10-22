@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 type TMovie = {
   imdbID: string;
@@ -97,14 +97,8 @@ function NumResults({ movies }: { movies: TMovie[] }) {
   );
 }
 
-function NavBar({ movies }: { movies: TMovie[] }) {
-  return (
-    <nav className="nav-bar">
-      <Logo />
-      <Search />
-      <NumResults movies={movies} />
-    </nav>
-  );
+function NavBar({ children }: { children: ReactNode }) {
+  return <nav className="nav-bar">{children}</nav>;
 }
 
 function Movie({ movie }: { movie: TMovie }) {
@@ -132,7 +126,7 @@ function MovieList({ movies }: { movies: TMovie[] }) {
   );
 }
 
-function ListBox({ movies }: { movies: TMovie[] }) {
+function ListBox({ children }: { children: ReactNode }) {
   const [isOpen1, setIsOpen1] = useState(true);
 
   return (
@@ -143,7 +137,7 @@ function ListBox({ movies }: { movies: TMovie[] }) {
       >
         {isOpen1 ? '–' : '+'}
       </button>
-      {isOpen1 && <MovieList movies={movies} />}
+      {isOpen1 && children}
     </div>
   );
 }
@@ -233,13 +227,8 @@ function WatchedBox() {
   );
 }
 
-function Main({ movies }: { movies: TMovie[] }) {
-  return (
-    <main className="main">
-      <ListBox movies={movies} />
-      <WatchedBox />
-    </main>
-  );
+function Main({ children }: { children: ReactNode }) {
+  return <main className="main">{children}</main>;
 }
 
 export default function App() {
@@ -247,8 +236,17 @@ export default function App() {
 
   return (
     <>
-      <NavBar movies={movies} />
-      <Main movies={movies} />
+      <NavBar>
+        <Logo />
+        <Search />
+        <NumResults movies={movies} />
+      </NavBar>
+      <Main>
+        <ListBox>
+          <MovieList movies={movies} />
+        </ListBox>
+        <WatchedBox />
+      </Main>
     </>
   );
 }
