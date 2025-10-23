@@ -126,7 +126,7 @@ function MovieList({ movies }: { movies: TMovie[] }) {
   );
 }
 
-function ListBox({ children }: { children: ReactNode }) {
+function Box({ children }: { children: ReactNode }) {
   const [isOpen1, setIsOpen1] = useState(true);
 
   return (
@@ -205,34 +205,13 @@ function WatchedMoviesList({ watched }: { watched: TWatchedData[] }) {
   );
 }
 
-function WatchedBox() {
-  const [watched, setWatched] = useState(tempWatchedData);
-  const [isOpen2, setIsOpen2] = useState(true);
-
-  return (
-    <div className="box">
-      <button
-        className="btn-toggle"
-        onClick={() => setIsOpen2((open) => !open)}
-      >
-        {isOpen2 ? '–' : '+'}
-      </button>
-      {isOpen2 && (
-        <>
-          <WatchedSummary watched={watched} />
-          <WatchedMoviesList watched={watched} />
-        </>
-      )}
-    </div>
-  );
-}
-
 function Main({ children }: { children: ReactNode }) {
   return <main className="main">{children}</main>;
 }
 
 export default function App() {
   const [movies, setMovies] = useState(tempMovieData);
+  const [watched, setWatched] = useState(tempWatchedData);
 
   return (
     <>
@@ -242,10 +221,13 @@ export default function App() {
         <NumResults movies={movies} />
       </NavBar>
       <Main>
-        <ListBox>
+        <Box>
           <MovieList movies={movies} />
-        </ListBox>
-        <WatchedBox />
+        </Box>
+        <Box>
+          <WatchedSummary watched={watched} />
+          <WatchedMoviesList watched={watched} />
+        </Box>
       </Main>
     </>
   );
