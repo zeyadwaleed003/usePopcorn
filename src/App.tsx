@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 type TMovie = {
   imdbID: string;
@@ -209,9 +209,28 @@ function Main({ children }: { children: ReactNode }) {
   return <main className="main">{children}</main>;
 }
 
+const KEY = '97e465df';
+
 export default function App() {
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(function () {
+    setIsLoading(true);
+    async function fetchMovies() {
+      const res =
+        await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar
+`);
+
+      const data = await res.json();
+      setMovies(data.Search);
+      setIsLoading(false);
+    }
+
+    fetchMovies();
+  }, []);
+  // The empty array means that the component will only get executed as the component first mounts
 
   return (
     <>
@@ -221,9 +240,7 @@ export default function App() {
         <NumResults movies={movies} />
       </NavBar>
       <Main>
-        <Box>
-          <MovieList movies={movies} />
-        </Box>
+        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
         <Box>
           <WatchedSummary watched={watched} />
           <WatchedMoviesList watched={watched} />
@@ -231,4 +248,8 @@ export default function App() {
       </Main>
     </>
   );
+}
+
+function Loader() {
+  return <p className="loader">Loading...</p>;
 }
