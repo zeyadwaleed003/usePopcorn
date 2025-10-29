@@ -11,25 +11,38 @@ const startContainerStyle: CSSProperties = {
   display: 'flex',
 };
 
-export default function ({
-  maxRating = 5,
-  color = '#fcc419',
-  size = '48',
-  className = '',
-}: {
+interface StarRatingProps {
   maxRating?: number;
   color?: string;
-  size?: string;
+  size?: number;
   className?: string;
-}) {
-  const [rating, setRating] = useState(0);
+  messages?: string[];
+  defaultRating?: number;
+  onSetRating?: (rating: number) => void;
+}
+
+export default function StarRating({
+  maxRating = 5,
+  color = '#fcc419',
+  size = 48,
+  className = '',
+  messages = [],
+  defaultRating = 0,
+  onSetRating,
+}: StarRatingProps) {
+  const [rating, setRating] = useState(defaultRating);
   const [tempRating, setTempRating] = useState(0);
+
+  function handleRating(rating: number) {
+    setRating(rating);
+    onSetRating?.(rating);
+  }
 
   const textStyle: CSSProperties = {
     lineHeight: '1',
     margin: '0',
     color,
-    fontSize: `${Number(size) / 1.5}px`,
+    fontSize: `${size / 1.5}px`,
   };
 
   return (
@@ -38,16 +51,20 @@ export default function ({
         {Array.from({ length: maxRating }, (_, i) => (
           <Star
             key={i}
-            onRate={() => setRating(i + 1)}
+            onRate={() => handleRating(i + 1)}
             full={tempRating ? tempRating >= i + 1 : rating >= i + 1}
-            onHover={() => setTempRating(i + 1)}
-            onLeave={() => setTempRating(0)}
+            onHoverIn={() => setTempRating(i + 1)}
+            onHoverOut={() => setTempRating(0)}
             color={color}
             size={size}
           />
         ))}
       </div>
-      <p style={textStyle}>{tempRating || rating || ''}</p>
+      <p style={textStyle}>
+        {messages.length === maxRating
+          ? messages[tempRating ? tempRating - 1 : rating - 1]
+          : tempRating || rating || ''}
+      </p>
     </div>
   );
 }
@@ -55,17 +72,17 @@ export default function ({
 function Star({
   onRate,
   full,
-  onHover,
-  onLeave,
+  onHoverIn,
+  onHoverOut,
   color,
   size,
 }: {
   onRate: () => void;
   full: boolean;
-  onHover: () => void;
-  onLeave: () => void;
+  onHoverIn: () => void;
+  onHoverOut: () => void;
   color: string;
-  size: string;
+  size: number;
 }) {
   const starStyle: CSSProperties = {
     width: `${size}px`,
@@ -79,8 +96,8 @@ function Star({
       style={starStyle}
       role="button"
       onClick={onRate}
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
+      onMouseEnter={onHoverIn}
+      onMouseLeave={onHoverOut}
     >
       {full ? (
         <svg
