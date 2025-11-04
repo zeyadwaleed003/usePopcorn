@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import StarRating from './StarRating';
 
 type TMovie = {
@@ -38,6 +38,21 @@ function Search({
   query: string;
   setQuery: (s: string) => void;
 }) {
+  const inputEl = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function callback(e: KeyboardEvent) {
+      if (document.activeElement === inputEl.current) return;
+
+      if (e.code === 'Enter') {
+        inputEl.current?.focus();
+        setQuery('');
+      }
+    }
+
+    document.addEventListener('keydown', callback);
+  }, [setQuery]);
+
   return (
     <input
       className="search"
@@ -45,6 +60,7 @@ function Search({
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={inputEl}
     />
   );
 }
