@@ -1,8 +1,10 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import StarRating from './StarRating';
 import { useMovies } from './useMovies';
+import { useLocalStorageState } from './useLocalStorageState';
+import { useKey } from './useKey';
 
-type TMovie = {
+export type TMovie = {
   imdbID: string;
   Title: string;
   Year: string;
@@ -42,18 +44,12 @@ function Search({
 }) {
   const inputEl = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    function callback(e: KeyboardEvent) {
-      if (document.activeElement === inputEl.current) return;
+  useKey('Enter', function () {
+    if (document.activeElement === inputEl.current) return;
 
-      if (e.code === 'Enter') {
-        inputEl.current?.focus();
-        setQuery('');
-      }
-    }
-
-    document.addEventListener('keydown', callback);
-  }, [setQuery]);
+    inputEl.current?.focus();
+    setQuery('');
+  });
 
   return (
     <input
@@ -230,9 +226,11 @@ export default function App() {
 
   const { movies, error, isLoading } = useMovies(query, handleCloseMovie);
 
-  const [watched, setWatched] = useState(function () {
-    return JSON.parse(localStorage.getItem('watched')!) as TMovie[];
-  });
+  const [watched, setWatched] = useLocalStorageState([], 'watched');
+
+  // const [watched, setWatched] = useState(function () {
+  //   return JSON.parse(localStorage.getItem('watched')!) as TMovie[];
+  // });
 
   function handleSelectMovie(id: string) {
     setSelectedId(id === selectedId ? null : id);
@@ -243,22 +241,24 @@ export default function App() {
   }
 
   function handleAddWatched(movie: TMovie) {
-    setWatched((watched) => [...watched, movie]);
+    setWatched((watched: TMovie[]) => [...watched, movie]);
 
     // localStorage.setItem('watched', JSON.stringify([...watched, movie]));
   }
 
   function handleDeleteWatched(id: string) {
-    setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
+    setWatched((watched: TMovie[]) =>
+      watched.filter((movie) => movie.imdbID !== id)
+    );
   }
 
   // Synchronizing the localstorage with watched state
-  useEffect(
-    function () {
-      localStorage.setItem('watched', JSON.stringify(watched));
-    },
-    [watched]
-  );
+  // useEffect(
+  //   function () {
+  //     localStorage.setItem('watched', JSON.stringify(watched));
+  //   },
+  //   [watched]
+  // );
 
   return (
     <>
@@ -386,22 +386,7 @@ function MovieDetails({
     [movie.Title]
   );
 
-  useEffect(
-    function () {
-      function callback(e: KeyboardEvent) {
-        if (e.code === 'Escape') {
-          onCloseMovie();
-        }
-      }
-
-      document.addEventListener('keydown', callback);
-
-      return function () {
-        document.removeEventListener('keydown', callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  useKey('Escape', onCloseMovie);
 
   return (
     <div className="details">
