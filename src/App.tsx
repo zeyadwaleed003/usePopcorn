@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import StarRating from './StarRating';
+import { useMovies } from './useMovies';
 
 type TMovie = {
   imdbID: string;
@@ -14,6 +15,7 @@ type TMovie = {
   Director?: string;
   Genre?: string;
   userRating?: string | number;
+  countRatingDecisions?: number;
 };
 
 const average = (arr: any) =>
@@ -224,10 +226,9 @@ const KEY = '97e465df';
 
 export default function App() {
   const [query, setQuery] = useState('');
-  const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [selectedId, setSelectedId] = useState<null | string>(null);
+
+  const { movies, error, isLoading } = useMovies(query, handleCloseMovie);
 
   const [watched, setWatched] = useState(function () {
     return JSON.parse(localStorage.getItem('watched')!) as TMovie[];
@@ -258,53 +259,6 @@ export default function App() {
     },
     [watched]
   );
-
-  useEffect(
-    function () {
-      const controller = new AbortController();
-
-      async function fetchMovies() {
-        try {
-          setIsLoading(true);
-          setError('');
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
-            {
-              signal: controller.signal,
-            }
-          );
-
-          if (!res.ok)
-            throw new Error('Something went wrong with fetching movies');
-
-          const data = await res.json();
-          if (data.Response === 'False') throw new Error('Movie not found');
-
-          setMovies(data.Search);
-          setError('');
-        } catch (err: any) {
-          if (err.name !== 'AbortError') setError(err.message);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError('');
-        return;
-      }
-
-      handleCloseMovie();
-      fetchMovies();
-
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
-  );
-  // The empty array means that the component will only get executed as the component first mounts
 
   return (
     <>
@@ -372,6 +326,12 @@ function MovieDetails({
     (movie) => movie.imdbID === selectedId
   )?.userRating;
 
+  const countRef = useRef(0);
+
+  useEffect(() => {
+    if (userRating) countRef.current += 1;
+  }, [userRating]);
+
   function handleAdd() {
     const runtime =
       movie.Runtime && typeof movie.Runtime === 'string'
@@ -388,6 +348,7 @@ function MovieDetails({
       imdbRating: Number(movie.imdbRating),
       Runtime: runtime,
       userRating,
+      countRatingDecisions: countRef.current,
     };
 
     onAddWatched(newWatchedMovie);
